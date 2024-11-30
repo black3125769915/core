@@ -200,12 +200,13 @@ void orderProfit(struct good*head)
     if(head==NULL)
     return;
    struct good*i,*j;
-   int temp1,temp2,temp3,temp4;
+   int temp1,temp3;
+   float temp4,temp2;
    for(i=head;i!=NULL;i=i->next)
    {
     for(j=i->next;j!=NULL;j=j->next)
     {
-        if(i->sellCount*i->exportPrice-i->importCount*i->importPrice<j->sellCount*j->exportPrice-j->importCount*j->importPrice)
+        if(i->sellCount*i->exportPrice-i->sellCount*i->importPrice<j->sellCount*j->exportPrice-j->sellCount*j->importPrice)
         {
             temp1=i->sellCount;
             temp2=i->exportPrice;
@@ -230,14 +231,20 @@ void orderSellmoney(struct good* head) {
     for (i = head; i != NULL; i = i->next) {
         for (j = i->next; j != NULL; j = j->next) {
             if (i->sellCount * i->exportPrice < j->sellCount * j->exportPrice) {
-                // 交换完整的结构体内容
-                struct good temp = *i;
-                *i = *j;
-                *j = temp;
-                // 保持 next 指针指向不变
-                temp.next = i->next;
-                i->next = j->next;
-                j->next = temp.next;
+               int temp1,temp3;
+                float temp4,temp2;
+                temp1=i->sellCount;
+                temp2=i->exportPrice;
+                temp3=i->importCount;
+                temp4=i->importPrice;
+                i->sellCount=j->sellCount;
+                i->exportPrice=j->exportPrice;
+                i->importCount=j->importCount;
+                i->importPrice=j->importPrice;
+                j->sellCount=temp1;
+                j->exportPrice=temp2;
+                j->importCount=temp3;
+                j->importPrice=temp4;
             }
         }
     }
