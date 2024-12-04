@@ -2,12 +2,13 @@
 #include<string.h>
 #include<stdlib.h>
 #pragma warning(disable : 4996)
+#define N 10
 //创建商品
 struct good
 {
     int number, importCount, sellCount;
     float importPrice, exportPrice;
-    char name[10];
+    char name[N];
     struct good* next;
 };
 
@@ -53,14 +54,18 @@ void insertNode(struct good** head, int number, const char* name, int importCoun
 //打印链表
 void printList(struct good* head)
 {
-    if (head == NULL)
-        return;
-    while (head != NULL)
+    struct good* current = head;
+    if (current == NULL)
     {
-        printf("编号%d 品名%s 进价%.2f 售价%.2f 进货量%d 销售量%d 销售额%.2f 剩余数%d 毛利%.2f\n", head->number,
-            head->name, head->importPrice, head->exportPrice, head->importCount, head->sellCount,
-            head->exportPrice * head->sellCount, head->importCount - head->sellCount, head->exportPrice * head->sellCount - head->importPrice * head->sellCount);
-        head = head->next;
+        printf("内容为空，无法打印\n");
+        return;
+    }
+    while (current != NULL)
+    {
+        printf("编号%d 品名%s 进价%.2f 售价%.2f 进货量%d 销售量%d 销售额%.2f 剩余数%d 毛利%.2f\n", current->number,
+            current->name, current->importPrice, current->exportPrice, current->importCount, current->sellCount,
+            current->exportPrice * current->sellCount, current->importCount - current->sellCount, current->exportPrice * current->sellCount - current->importPrice * current->sellCount);
+        current = current->next;
     }
 }
 
@@ -83,7 +88,7 @@ void createGood(struct good** head)
 {
     int number, importCount, sellCount;
     float importPrice, exportPrice;
-    char name[10];
+    char name[N];
     printf("请输入品名: ");
     scanf("%9s", name);
     printf("请输入编号: ");
@@ -101,34 +106,66 @@ void createGood(struct good** head)
 }
 
 //删除商品
-void deleteGood(struct good* head)
+void deleteGood(struct good** head)
 {
     int key;
     printf("输入要删除商品编号：");
     scanf("%d", &key);
-    struct good* temp = head, * current;
-    while ((temp->next)->number != key)
+    if (*head == NULL)
     {
-        temp = temp->next;
+        *head = NULL;
+        printf("链表为空，结束！");
+        return;
     }
-    if (temp == NULL)
+    else if ((*head)->number == key)
     {
-        printf("错误");
-        exit(1);
+        struct good* temp = *head;
+        if ((*head)->next == NULL)
+        {
+            printf("链表为空！");
+        }
+        else
+        {
+            *head = temp->next;
+            free(temp);
+            return;
+        }
     }
-    current = temp;
-    temp = temp->next;
-    current->next = temp->next;
-    free(temp);
+    else
+    {
+        struct good* temp = *head;
+        struct good* current = NULL;
+        while (temp != NULL && temp->number != key)
+        {
+            current = temp;
+            temp = temp->next;
+        }
+        if (temp == NULL)
+        {
+            printf("找不到要删除商品！\n");
+            return;
+        }
+        else if (temp->next != NULL && temp->number == key)
+        {
+            current->next = temp->next;
+            free(temp);
+            return;
+        }
+        else
+        {
+            current->next = NULL;
+            return;
+        }
+    }
 }
 
 //编辑商品信息
-void changeGood(struct good* head)
+void changeGood(struct good** head)
 {
     int key1;
     printf("输入要修改商品编号：");
     scanf("%d", &key1);
-    struct good* temp = head;
+    struct good* temp = *head;
     while (temp != NULL && temp->number != key1)
     {
         temp = temp->next;
@@ -165,6 +202,10 @@ void statGood(struct good* head)
 //按剩余数查询
 void findCount(struct good* head)
 {
+    if (head == NULL)
+    {
+        printf("输入错误！");
+    }
     int key1;
     printf("输入要查询剩余数：");
     scanf("%d", &key1);
@@ -181,7 +222,7 @@ void findCount(struct good* head)
 //按品名查询
 void findName(struct good* head)
 {
-    char key[10];
+    char key[N];
     printf("输入要查找品名：");
     fgets(key, sizeof(key), stdin);
     key[strcspn(key, "\n")] = '\0';
@@ -199,67 +240,117 @@ void findName(struct good* head)
         head->exportPrice * head->sellCount, head->importCount - head->sellCount, head->exportPrice * head->sellCount - head->importPrice * head->sellCount);
 }
 
-//按毛利高低显示
-void orderProfit(struct good* head)
+void orderByNumber(struct good* head)
 {
-
     if (head == NULL)
         return;
+
     struct good* i, * j;
-    int temp1, temp3;
-    float temp4, temp2;
+    for (i = head; i != NULL; i = i->next)
+    {
+        for (j = i->next; j != NULL; j = j->next)
+        {
+            if (i->number > j->number) 
+            {
+                int temp_number = i->number;
+                i->number = j->number;
+                j->number = temp_number;
+                char temp_name[10];
+                strcpy(temp_name, i->name);
+                strcpy(i->name, j->name);
+                strcpy(j->name, temp_name);
+                int temp_importCount = i->importCount;
+                i->importCount = j->importCount;
+                j->importCount = temp_importCount;
+                int temp_sellCount = i->sellCount;
+                i->sellCount = j->sellCount;
+                j->sellCount = temp_sellCount;
+                float temp_importPrice = i->importPrice;
+                i->importPrice = j->importPrice;
+                j->importPrice = temp_importPrice;
+                float temp_exportPrice = i->exportPrice;
+                i->exportPrice = j->exportPrice;
+                j->exportPrice = temp_exportPrice;
+            }
+        }
+    }
+}
+
+//按毛利高低显示
+void orderProfit(struct good*head)
+{
+    if (head == NULL)
+        return;
+    struct good* i, * j, * temp;
     for (i = head; i != NULL; i = i->next)
     {
         for (j = i->next; j != NULL; j = j->next)
         {
             if (i->sellCount * i->exportPrice - i->sellCount * i->importPrice < j->sellCount * j->exportPrice - j->sellCount * j->importPrice)
             {
-                temp1 = i->sellCount;
-                temp2 = i->exportPrice;
-                temp3 = i->importCount;
-                temp4 = i->importPrice;
-                i->sellCount = j->sellCount;
+                int number = i->number;
+                float importPrice = i->importPrice;
+                float exportPrice = i->exportPrice;
+                int importCount = i->importCount;
+                int sellCount = i->sellCount;
+                char name[N];
+                strcpy(name, i->name);
+                i->number = j->number;
+                i->importPrice = j->importPrice;
                 i->exportPrice = j->exportPrice;
                 i->importCount = j->importCount;
-                i->importPrice = j->importPrice;
-                j->sellCount = temp1;
-                j->exportPrice = temp2;
-                j->importCount = temp3;
-                j->importPrice = temp4;
+                i->sellCount = j->sellCount;
+                strcpy(i->name, j->name);
+                j->number = number;
+                j->importPrice = importPrice;
+                j->exportPrice = exportPrice;
+                j->importCount = importCount;
+                j->sellCount = sellCount;
+                strcpy(j->name, name);
             }
         }
     }
+    printList(head);
+    orderByNumber(head);
 }
 
+
 //按销售额高低显示
-void orderSellmoney(struct good* head) {
-    struct good* i, * j;
+void orderSellmoney(struct good*head) {
+    struct good* i, * j, * temp;
     for (i = head; i != NULL; i = i->next) {
         for (j = i->next; j != NULL; j = j->next) {
             if (i->sellCount * i->exportPrice < j->sellCount * j->exportPrice) {
-                int temp1, temp3;
-                float temp4, temp2;
-                temp1 = i->sellCount;
-                temp2 = i->exportPrice;
-                temp3 = i->importCount;
-                temp4 = i->importPrice;
-                i->sellCount = j->sellCount;
+                int number = i->number;
+                float importPrice = i->importPrice;
+                float exportPrice = i->exportPrice;
+                int importCount = i->importCount;
+                int sellCount = i->sellCount;
+                char name[N];
+                strcpy(name, i->name);
+                i->number = j->number;
+                i->importPrice = j->importPrice;
                 i->exportPrice = j->exportPrice;
                 i->importCount = j->importCount;
-                i->importPrice = j->importPrice;
-                j->sellCount = temp1;
-                j->exportPrice = temp2;
-                j->importCount = temp3;
-                j->importPrice = temp4;
+                i->sellCount = j->sellCount;
+                strcpy(i->name, j->name);
+                j->number = number;
+                j->importPrice = importPrice;
+                j->exportPrice = exportPrice;
+                j->importCount = importCount;
+                j->sellCount = sellCount;
+                strcpy(j->name, name);
             }
         }
     }
+    printList(head);
+    orderByNumber(head);
 }
 
 //菜单
 void showMenu()
 {
-    printf("|------------------|\n");
+    printf("|-------------------|\n");
     printf("|请输入选项编号 0-5:|\n");
     printf("|--1--创建商品档案--|\n");
     printf("|--2--编辑商品信息--|\n");
@@ -271,31 +362,29 @@ void showMenu()
 }
 
 //编辑商品
-void editGood(struct good* head)
+void editGood(struct good** head)
 {
     while (1)
     {
-        printf("|-------------------|\n");
-        printf("|请输入选项编号  0-4:|\n");
-        printf("|--1-----添加新商品--|\n");
-        printf("|--2----删除原有商品-|\n");
+        printf("|---------------------|\n");
+        printf("|请输入选项编号  0-4:-|\n");
+        printf("|--1-----添加新商品---|\n");
+        printf("|--2----删除原有商品--|\n");
         printf("|--3--修改原有商品信息|\n");
-        printf("|--4--------返回-----|\n");
-        printf("|--0------退出系统---|\n");
-        printf("|--------------------|\n");
+        printf("|--4--------返回------|\n");
+        printf("|--0------退出系统----|\n");
+        printf("|---------------------|\n");
         int command;
         printf("输入指令:");
         scanf("%d", &command);
         switch (command)
         {
         case 1:
-            createGood(&head); break;
+            createGood(head); break;
         case 2:
-            deleteGood(head);
-            break;
+            deleteGood(head); break;
         case 3:
-            changeGood(head);
-            break;
+            changeGood(head); break;
         case 4:
             return;
         case 0:
@@ -312,7 +401,7 @@ void findGood(struct good* head)
 {
     while (1)
     {
-        printf("|-------------------|\n");
+        printf("|--------------------|\n");
         printf("|请输入选项编号  0-3:|\n");
         printf("|--1-----按品名查询--|\n");
         printf("|--2----按剩余数查询-|\n");
@@ -326,36 +415,32 @@ void findGood(struct good* head)
         switch (command)
         {
         case 1:
-            findName(head);
-            break;
+            findName(head); break;
         case 2:
-           
-            findCount(head);
-            break;
+            findCount(head); break;
         case 3:
             return;
         case 0:
             exit(0);
         default:
-            printf("指令错误");
-            break;
+            printf("指令错误"); break;
         }
     }
 }
 
 //显示商品信息
-void showGood(struct good* head)
+void showGood(struct good*head)
 {
     while (1)
     {
-        printf("|-----------------------|\n");
+        printf("|------------------------|\n");
         printf("|--请输入选项编号  0-4:--|\n");
         printf("|--1-----按原来顺序显示--|\n");
         printf("|--2----按销售额高低显示-|\n");
         printf("|--3----按毛利高低显示---|\n");
-        printf("|--4--------返回--------|\n");
+        printf("|--4--------返回---------|\n");
         printf("|--0--------退出---------|\n");
-        printf("|-----------------------|\n");
+        printf("|------------------------|\n");
         int command;
         printf("输入指令:");
         scanf("%d", &command);
@@ -364,20 +449,15 @@ void showGood(struct good* head)
         case 1:
             printList(head); break;
         case 2:
-            orderSellmoney(head);
-            printList(head);
-            break;
+            orderSellmoney(head); break;
         case 3:
-            orderProfit(head);
-            printList(head);
-            break;
+            orderProfit(head); break;
         case 4:
             return;
         case 0:
             exit(0);
         default:
-            printf("指令错误!");
-            break;
+            printf("指令错误!"); break;
         }
     }
 }
@@ -393,13 +473,12 @@ int main()
         switch (command)
         {
         case 1:createGood(&head); break;
-        case 2:editGood(head); break;
+        case 2:editGood(&head); break;
         case 3:statGood(head); break;
         case 4:findGood(head); break;
         case 5:showGood(head); break;
         case 0:freeList(head); exit(0);
-        default:printf("指令错误！"); break;
+        default:printf("指令错误！\n"); break;
         }
-
     }
 }
